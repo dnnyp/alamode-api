@@ -3,6 +3,8 @@ const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
 const passport = require('passport')
 
+const osmosis = require('osmosis')
+
 // pull in Mongoose model for reports
 const Report = require('../models/report')
 
@@ -26,6 +28,8 @@ const requireToken = passport.authenticate('bearer', { session: false })
 
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
+
+const getDate = require('../../lib/get_date')
 
 // INDEX
 // GET /reports
@@ -58,18 +62,42 @@ router.get('/reports/:id', requireToken, (req, res, next) => {
 // CREATE
 // POST /reports
 router.post('/reports', requireToken, (req, res, next) => {
-  // set owner of new example to be current user
-  req.body.report.owner = req.user.id
+  const products = []
 
-  Report.create(req.body.report)
-    // respond to succesful `create` with status 201 and JSON of new "report"
-    .then(report => {
-      res.status(201).json({ report: report.toObject() })
+  // scrape data from URL
+  osmosis
+    .get(req.body.url)
+    .find('.hproduct.product')
+    .set({ // hard coded for now
+      'name': '.title',
+      'url': '.url@href',
+      'price': '.retail-price',
+      'sale': '.sale-price-high'
     })
-    // if an error occurs, pass it off to our error handler
-    // the error handler needs the error message and the `res` object so that it
-    // can send an error message back to the client
-    .catch(next)
+    .data(function (product) {
+      product.url = 'https://www.shopbop.com' + product.url // hard coded for now
+      product.sale = product.price === product.sale ? 'N' : product.sale
+      products.push(Object.assign({}, product))
+    })
+    .done(() => {
+      const reportPojo = {
+        title: `${getDate()} ${req.body.url}`,
+        url: req.body.url,
+        products: products,
+        owner: req.user.id
+      }
+
+      Report.create(reportPojo)
+        // respond to succesful `create` with status 201 and JSON of new "report"
+        .then(report => {
+          res.status(201).json({ report: report.toObject() })
+        })
+        // if an error occurs, pass it off to our error handler
+        // the error handler needs the error message and the `res` object so that it
+        // can send an error message back to the client
+        .catch(next)
+    })
+    .error(console.log)
 })
 
 // UPDATE

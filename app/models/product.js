@@ -5,11 +5,15 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  url: {
+    type: String,
+    required: true
+  },
   price: {
     type: String,
     required: true
   },
-  markdown: {
+  sale: {
     type: String,
     required: true
   }
