@@ -114,11 +114,13 @@ router.patch('/reports/:id', requireToken, removeBlanks, (req, res, next) => {
       // it will throw an error if the current user isn't the owner
       requireOwnership(req, report)
 
-      // pass the result of Mongoose's `.update` to the next `.then`
-      return report.updateOne(req.body.report)
+      // pass the result of Mongoose's `.set` to the next `.then`
+      return report.set(req.body.report).save()
     })
-    // if that succeeded, return 204 and no JSON
-    .then(() => res.sendStatus(204))
+    // if that succeeded, return 200 and JSON
+    .then(report => {
+      res.status(200).json({ report: report.toObject() })
+    })
     // if an error occurs, pass it to the handler
     .catch(next)
 })
