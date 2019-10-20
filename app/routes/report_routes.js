@@ -80,8 +80,14 @@ router.post('/reports', requireToken, (req, res, next) => {
       products.push(Object.assign({}, product))
     })
     .done(() => {
+      let parsedUrl = req.body.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
+      if (parsedUrl != null && parsedUrl.length > 2 && typeof parsedUrl[2] === 'string' && parsedUrl[2].length > 0) {
+        parsedUrl = parsedUrl[2]
+      } else {
+        parsedUrl = null
+      }
       const reportPojo = {
-        title: `${getDate()} ${req.body.url}`,
+        title: `${getDate()} ${parsedUrl}`,
         url: req.body.url,
         products: products,
         owner: req.user.id
