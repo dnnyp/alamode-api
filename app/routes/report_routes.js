@@ -64,19 +64,61 @@ router.get('/reports/:id', requireToken, (req, res, next) => {
 router.post('/reports', requireToken, (req, res, next) => {
   const products = []
 
+  let baseUrl = ''
+  let selector = ''
+  let setPattern = {}
+
+  switch (req.body.url) {
+    case 'https://www.eastdane.com/brands-club-monaco/br/v=1/48853.htm':
+      baseUrl = 'https://www.eastdane.com'
+      selector = '.hproduct.product'
+      setPattern = {
+        'name': '.description',
+        'url': '.url@href',
+        'price': '.retail-price',
+        'sale': '.sale-price-high'
+      }
+      break
+    case 'https://shop.nordstrom.com/brands/club-monaco--18278':
+      baseUrl = 'https://shop.nordstrom.com'
+      selector = '._1AOd3.QIjwE'
+      setPattern = {
+        'name': '._5lXiG._1sMDh._2PDR1',
+        'url': '._5lXiG._1sMDh._2PDR1@href',
+        'price': '.YbtDD._3bi0z ._3wu-9',
+        'sale': '.YbtDD._18N5Q ._3wu-9'
+      }
+      break
+    case 'https://www.shopbop.com/club-monaco/br/v=1/10148.htm':
+      baseUrl = 'https://www.shopbop.com'
+      selector = '.hproduct.product'
+      setPattern = {
+        'name': '.title',
+        'url': '.url@href',
+        'price': '.retail-price',
+        'sale': '.sale-price-high'
+      }
+      break
+    default:
+      selector = ''
+      setPattern = {}
+  }
+
   // scrape data from URL
   osmosis
     .get(req.body.url)
-    .find('.hproduct.product')
-    .set({ // hard coded for now
-      'name': '.title',
-      'url': '.url@href',
-      'price': '.retail-price',
-      'sale': '.sale-price-high'
-    })
+    .find(selector)
+    .set(setPattern)
     .data(function (product) {
-      product.url = 'https://www.shopbop.com' + product.url // hard coded for now
-      product.sale = product.price === product.sale ? 'N' : product.sale
+      product.url = baseUrl + product.url
+      if (product.name.includes('Club Monaco ')) {
+        product.name = product.name.replace('Club Monaco ', '')
+      }
+      if (product.sale) {
+        product.sale = product.price === product.sale ? 'N' : product.sale
+      } else {
+        product.sale = 'N'
+      }
       products.push(Object.assign({}, product))
     })
     .done(() => {
