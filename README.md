@@ -16,9 +16,9 @@ This is the repository for the server application. For the client repository and
 - To launch the app in your local browser, run ```npm run server```
 
 ## Links
-- [Client Repo](https://github.com/dnnyp/shop-scrape-app-client)
-- [Deployed Client](https://dnnyp.github.io/shop-scrape-app-client)
-- [API Repo](https://github.com/dnnyp/shop-scrape-app-api)
+- [Client Repo](https://github.com/dnnyp/alamode-client)
+- [Deployed Client](https://dnnyp.github.io/alamode-client)
+- [API Repo](https://github.com/dnnyp/alamode-api)
 - [Deployed API](https://quiet-thicket-71875.herokuapp.com)
 
 ## Technologies Used
