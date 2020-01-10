@@ -3,7 +3,8 @@ const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
 const passport = require('passport')
 
-const osmosis = require('osmosis')
+// helper function to scrape data from site passed as an argument
+const scrape = require('../../lib/scrape_site')
 
 // pull in Mongoose model for reports
 const Report = require('../models/report')
@@ -62,90 +63,34 @@ router.get('/reports/:id', requireToken, (req, res, next) => {
 // CREATE
 // POST /reports
 router.post('/reports', requireToken, (req, res, next) => {
-  const products = []
-
-  let baseUrl = ''
-  let selector = ''
-  let setPattern = {}
-
-  switch (req.body.url) {
-    case 'https://www.eastdane.com/brands-club-monaco/br/v=1/48853.htm':
-      baseUrl = 'https://www.eastdane.com'
-      selector = '.hproduct.product'
-      setPattern = {
-        'name': '.description',
-        'url': '.url@href',
-        'price': '.retail-price',
-        'sale': '.sale-price-high'
-      }
-      break
-    case 'https://shop.nordstrom.com/brands/club-monaco--18278':
-      baseUrl = 'https://shop.nordstrom.com'
-      selector = '._1AOd3.QIjwE'
-      setPattern = {
-        'name': '._5lXiG._1sMDh._2PDR1',
-        'url': '._5lXiG._1sMDh._2PDR1@href',
-        'price': '.YbtDD._3bi0z ._3wu-9',
-        'sale': '.YbtDD._18N5Q ._3wu-9'
-      }
-      break
-    case 'https://www.shopbop.com/club-monaco/br/v=1/10148.htm':
-      baseUrl = 'https://www.shopbop.com'
-      selector = '.hproduct.product'
-      setPattern = {
-        'name': '.title',
-        'url': '.url@href',
-        'price': '.retail-price',
-        'sale': '.sale-price-high'
-      }
-      break
-    default:
-      selector = ''
-      setPattern = {}
-  }
-
   // scrape data from URL
-  osmosis
-    .get(req.body.url)
-    .find(selector)
-    .set(setPattern)
-    .data(function (product) {
-      product.url = baseUrl + product.url
-      if (product.name.includes('Club Monaco ')) {
-        product.name = product.name.replace('Club Monaco ', '')
-      }
-      if (product.sale) {
-        product.sale = product.price === product.sale ? 'N' : product.sale
-      } else {
-        product.sale = 'N'
-      }
-      products.push(Object.assign({}, product))
-    })
-    .done(() => {
+  scrape(req.body.url)
+    .then(data => {
+      // parse URL for
       let parsedUrl = req.body.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
       if (parsedUrl != null && parsedUrl.length > 2 && typeof parsedUrl[2] === 'string' && parsedUrl[2].length > 0) {
         parsedUrl = parsedUrl[2]
       } else {
         parsedUrl = null
       }
-      const reportPojo = {
+      return {
         title: `${getDate()} ${parsedUrl}`,
         url: req.body.url,
-        products: products,
+        products: data,
         owner: req.user.id
       }
-
-      Report.create(reportPojo)
-        // respond to succesful `create` with status 201 and JSON of new "report"
-        .then(report => {
-          res.status(201).json({ report: report.toObject() })
-        })
-        // if an error occurs, pass it off to our error handler
-        // the error handler needs the error message and the `res` object so that it
-        // can send an error message back to the client
-        .catch(next)
     })
-    .error(console.log)
+    .then(reportPojo =>
+      Report.create(reportPojo)
+    )
+    // respond to succesful `create` with status 201 and JSON of new "report"
+    .then(report => {
+      res.status(201).json({ report: report.toObject() })
+    })
+    // if an error occurs, pass it off to our error handler
+    // the error handler needs the error message and the `res` object so that it
+    // can send an error message back to the client
+    .catch(next)
 })
 
 // UPDATE
