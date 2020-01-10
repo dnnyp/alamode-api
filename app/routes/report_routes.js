@@ -4,7 +4,6 @@ const express = require('express')
 const passport = require('passport')
 
 const osmosis = require('osmosis')
-const puppeteer = require('puppeteer')
 
 // pull in Mongoose model for reports
 const Report = require('../models/report')
