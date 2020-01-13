@@ -60,38 +60,46 @@ router.get('/reports/:id', requireToken, (req, res, next) => {
     .catch(next)
 })
 
+const createReportObject = (req, res, next) => {
+  // parse URL for
+  let parsedUrl = req.body.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
+  if (parsedUrl != null && parsedUrl.length > 2 && typeof parsedUrl[2] === 'string' && parsedUrl[2].length > 0) {
+    parsedUrl = parsedUrl[2]
+  } else {
+    parsedUrl = null
+  }
+  res.locals.reportObject = {
+    title: `${getDate()} ${parsedUrl}`,
+    url: req.body.url,
+    products: res.locals.reportData,
+    owner: req.user.id
+  }
+  next()
+}
+
+const createReportDocument = (req, res, next) => {
+  Report.create(res.locals.reportObject)
+    .then(report => {
+      // respond to succesful `create` with status 201 and JSON of new "report"
+      res.status(201).json({ report: report.toObject() })
+    })
+
+    // if an error occurs, pass it off to our error handler
+    // the error handler needs the error message and the `res` object so that it
+    // can send an error message back to the client
+    .catch(next)
+}
+
 // CREATE
 // POST /reports
 router.post('/reports', requireToken, (req, res, next) => {
   // scrape data from URL
   scrape(req.body.url)
     .then(data => {
-      // parse URL for
-      let parsedUrl = req.body.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
-      if (parsedUrl != null && parsedUrl.length > 2 && typeof parsedUrl[2] === 'string' && parsedUrl[2].length > 0) {
-        parsedUrl = parsedUrl[2]
-      } else {
-        parsedUrl = null
-      }
-      return {
-        title: `${getDate()} ${parsedUrl}`,
-        url: req.body.url,
-        products: data,
-        owner: req.user.id
-      }
+      res.locals.reportData = data
+      next()
     })
-    .then(reportPojo =>
-      Report.create(reportPojo)
-    )
-    // respond to succesful `create` with status 201 and JSON of new "report"
-    .then(report => {
-      res.status(201).json({ report: report.toObject() })
-    })
-    // if an error occurs, pass it off to our error handler
-    // the error handler needs the error message and the `res` object so that it
-    // can send an error message back to the client
-    .catch(next)
-})
+}, createReportObject, createReportDocument)
 
 // UPDATE
 // PATCH /reports/5a7db6c74d55bc51bdf39793
