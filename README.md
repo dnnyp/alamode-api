@@ -31,7 +31,7 @@ This is the repository for the server application. For the client repository and
 - Node.js
 - Axios
 - Passport.js
-- Node Osmosis
+- Puppeteer
 - MongoDB/Mongoose
 
 ## Future Features
@@ -43,7 +43,7 @@ This is the repository for the server application. For the client repository and
 ## Process
 The idea for this reporting tool came from observing the manual effort done by my partner at her fashion job to create product reports from her accounts' websites. I also drew inspiration from my prior experience working on the project team for a new financial reporting tool. My initial wireframes and ERD were created using Balsamiq. I utilized a GitHub project board to manage and prioritze my features.
 
-The back end application was built using Express.js and a MongoDB database. It uses Passport for authentication and Axios for making AJAX requests. A key feature of the back end is the ability to scrape data from a specified URL. I had to analyze how the data I wanted was organized on each of the e-commerce sites that my client application provides as an option. I needed to identify selectors that could be used to pull each piece of information I wanted. I originally went with Cheerio as my web scraping utility and spent quite some time trying to configure it's jsonframe plugin. I found it to be complicated for the purpose of my application and was able to find a simpler solution in Node Osmosis which did just the trick. I had to modify my Mongoose report model several times to reflect the type of product data that was available on the pages I was trying to scrape. I relied heavily on Postman to test my API endpoints including the web scraping functionality.
+The back end application was built using Express.js and a MongoDB database. It uses Passport for authentication and Axios for making AJAX requests. A key feature of the back end is the ability to scrape data from a specified URL. I had to analyze how the data I wanted was organized on each of the e-commerce sites that my client application provides as an option. I needed to identify selectors that could be used to pull each piece of information I wanted. I originally went with Cheerio as my web scraping utility and spent quite some time trying to configure it's jsonframe plugin. I found it to be complicated for the purpose of my application and was able to find a simpler solution in Node Osmosis which did just the trick. As I added more options for websites to scrape I found that dynamically loaded content was not being captured. Using Google's Puppeteer, I was able to not only capture dynamically loaded data but also data from paginated sites. I had to modify my Mongoose report model several times to reflect the type of product data that was available on the pages I was trying to scrape. I relied heavily on Postman to test my API endpoints including the web scraping functionality.
 
 ## ERD
 ![ERD](https://github.com/dnnyp/shop-scrape-app-client/blob/master/public/ERD.png?raw=true)
