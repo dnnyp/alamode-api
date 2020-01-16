@@ -78,6 +78,7 @@ build/Release
 # Dependency directories
 node_modules
 jspm_packages
+redis-5.0.7
 
 # Optional npm cache directory
 .npm
@@ -96,6 +97,9 @@ jspm_packages
 
 # Environmental variables
 .env
+
+# Redis dump file
+dump.rdb
 
 # End of https://www.gitignore.io/api/node
 *.bak
