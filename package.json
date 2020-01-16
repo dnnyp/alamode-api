@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "nf start",
     "test": "mocha --exit",
     "server": "nodemon server.js",
     "serve": "nodemon server.js",
@@ -29,7 +29,8 @@
     "passport-http-bearer": "^1.0.1",
     "puppeteer": "^2.0.0",
     "redis": "^2.8.0",
-    "throng": "^4.0.0"
+    "throng": "^4.0.0",
+    "uniqid": "^5.2.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",

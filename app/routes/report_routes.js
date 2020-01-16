@@ -3,9 +3,6 @@ const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
 const passport = require('passport')
 
-// helper function to scrape data from site passed as an argument
-const scrape = require('../../lib/scrape_site')
-
 // pull in Mongoose model for reports
 const Report = require('../models/report')
 
@@ -17,6 +14,8 @@ const Arena = require('bull-arena')
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
 // set up a Reports queue connected to the Redis instance
 const reportQueue = new Queue('Reports', REDIS_URL)
+// Uniqid docs: https://github.com/adamhalasz/uniqid/
+const uniqid = require('uniqid')
 
 // configuration for Bull Arena GUI job monitor
 const arena = Arena({
@@ -58,7 +57,7 @@ const requireToken = passport.authenticate('bearer', { session: false })
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
 
-const getDate = require('../../lib/get_date')
+// const getDate = require('../../lib/get_date')
 
 // Make arena's resources (js/css deps) available at the base app route
 router.use('/', arena)
@@ -91,6 +90,7 @@ router.get('/reports/:id', requireToken, (req, res, next) => {
     .catch(next)
 })
 
+/*
 const createReportObject = (req, res, next) => {
   // parse URL for
   let parsedUrl = req.body.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
@@ -120,17 +120,26 @@ const createReportDocument = (req, res, next) => {
     // can send an error message back to the client
     .catch(next)
 }
+*/
 
 // CREATE
 // POST /reports
-router.post('/reports', requireToken, (req, res, next) => {
-  // scrape data from URL
+router.post('/reports', requireToken, async (req, res, next) => {
+  const url = req.body.url
+  // Kick off a new job by adding it to the report queue
+  const job = await reportQueue.add('scrape site', { url }, { jobId: uniqid('rj-') })
+  // res.status(201).json({ job: job.id })
+  // res.json({ id: job.id })
+  /*
   scrape(req.body.url)
     .then(data => {
       res.locals.reportData = data
       next()
     })
-}, createReportObject, createReportDocument)
+    */
+}
+// , createReportObject, createReportDocument
+)
 
 // UPDATE
 // PATCH /reports/5a7db6c74d55bc51bdf39793
@@ -172,6 +181,10 @@ router.delete('/reports/:id', requireToken, (req, res, next) => {
     .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler
     .catch(next)
+})
+
+reportQueue.on('global:completed', (jobId, result) => {
+  console.log(`Job completed with result ${result}`)
 })
 
 module.exports = router
