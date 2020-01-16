@@ -16,15 +16,20 @@
   "dependencies": {
     "bcrypt": "^3.0.6",
     "body-parser": "^1.19.0",
+    "bull": "^3.12.1",
+    "bull-arena": "^2.6.4",
     "cors": "^2.8.5",
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
+    "foreman": "^3.0.1",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.3.1",
     "mongoose": "^5.6.11",
     "passport": "^0.4.0",
     "passport-http-bearer": "^1.0.1",
-    "puppeteer": "^2.0.0"
+    "puppeteer": "^2.0.0",
+    "redis": "^2.8.0",
+    "throng": "^4.0.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
