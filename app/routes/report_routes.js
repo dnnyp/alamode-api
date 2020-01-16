@@ -9,6 +9,34 @@ const scrape = require('../../lib/scrape_site')
 // pull in Mongoose model for reports
 const Report = require('../models/report')
 
+// Bull docs: https://github.com/OptimalBits/bull/tree/develop/docs
+const Queue = require('bull')
+// Bull Arena docs: https://github.com/bee-queue/arena
+const Arena = require('bull-arena')
+// Connect to a local redis instance locally, and the Heroku-provided URL in production
+const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
+// set up a Reports queue connected to the Redis instance
+const reportQueue = new Queue('Reports', REDIS_URL)
+
+// configuration for Bull Arena GUI job monitor
+const arena = Arena({
+  queues: [
+    {
+      name: 'Reports',
+      hostId: 'A LA MODE Queue Server',
+      redis: {
+        port: 6379 // Redis port
+      }
+    }
+  ]
+},
+{
+  // Make the arena dashboard become available at {my-site.com}/arena
+  basePath: '/arena',
+  // Let express handle the listening
+  disableListen: true
+})
+
 // this is a collection of methods that help us detect situations when we need
 // to throw a custom error
 const customErrors = require('../../lib/custom_errors')
@@ -31,6 +59,9 @@ const requireToken = passport.authenticate('bearer', { session: false })
 const router = express.Router()
 
 const getDate = require('../../lib/get_date')
+
+// Make arena's resources (js/css deps) available at the base app route
+router.use('/', arena)
 
 // INDEX
 // GET /reports
