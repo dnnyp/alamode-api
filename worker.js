@@ -38,29 +38,33 @@ function start () {
   const reportQueue = new Queue('Reports', REDIS_URL)
 
   reportQueue.process('scrape site', maxJobsPerWorker, async (job) => {
-    // scrape product data from URL
-    const productData = await scrape(job.data.url)
+    try {
+      // scrape product data from URL
+      const productData = await scrape(job.data.url)
 
-    // parse URL
-    let parsedUrl = job.data.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
-    if (parsedUrl != null && parsedUrl.length > 2 && typeof parsedUrl[2] === 'string' && parsedUrl[2].length > 0) {
-      parsedUrl = parsedUrl[2]
-    } else {
-      parsedUrl = null
+      // parse URL
+      let parsedUrl = job.data.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
+      if (parsedUrl != null && parsedUrl.length > 2 && typeof parsedUrl[2] === 'string' && parsedUrl[2].length > 0) {
+        parsedUrl = parsedUrl[2]
+      } else {
+        parsedUrl = null
+      }
+
+      // construct report object
+      const reportObject = {
+        title: `${getDate()} ${parsedUrl}`,
+        url: job.data.url,
+        products: productData,
+        owner: job.data.owner
+      }
+
+      // create new Mongo report document using report object
+      const report = await Report.create(reportObject)
+
+      return report
+    } catch (err) {
+      console.error(err)
     }
-
-    // construct report object
-    const reportObject = {
-      title: `${getDate()} ${parsedUrl}`,
-      url: job.data.url,
-      products: productData,
-      owner: job.data.owner
-    }
-
-    // create new Mongo report document using report object
-    const report = await Report.create(reportObject)
-
-    return report
   })
 }
 
