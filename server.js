@@ -30,6 +30,7 @@ const clientDevPort = 7165
 // use new version of URL parser
 // use createIndex instead of deprecated ensureIndex
 mongoose.Promise = global.Promise
+mongoose.set('useUnifiedTopology', true)
 mongoose.connect(db, {
   useNewUrlParser: true,
   useCreateIndex: true

@@ -25,6 +25,7 @@ const getDate = require('./lib/get_date')
 const db = require('./config/db')
 const mongoose = require('mongoose')
 mongoose.Promise = global.Promise
+mongoose.set('useUnifiedTopology', true)
 mongoose.connect(db, {
   useNewUrlParser: true,
   useCreateIndex: true
