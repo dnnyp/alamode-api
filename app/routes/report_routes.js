@@ -57,8 +57,6 @@ const requireToken = passport.authenticate('bearer', { session: false })
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
 
-// const getDate = require('../../lib/get_date')
-
 // Make arena's resources (js/css deps) available at the base app route
 router.use('/', arena)
 
@@ -90,56 +88,19 @@ router.get('/reports/:id', requireToken, (req, res, next) => {
     .catch(next)
 })
 
-/*
-const createReportObject = (req, res, next) => {
-  // parse URL for
-  let parsedUrl = req.body.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
-  if (parsedUrl != null && parsedUrl.length > 2 && typeof parsedUrl[2] === 'string' && parsedUrl[2].length > 0) {
-    parsedUrl = parsedUrl[2]
-  } else {
-    parsedUrl = null
-  }
-  res.locals.reportObject = {
-    title: `${getDate()} ${parsedUrl}`,
-    url: req.body.url,
-    products: res.locals.reportData,
-    owner: req.user.id
-  }
-  next()
-}
-
-const createReportDocument = (req, res, next) => {
-  Report.create(res.locals.reportObject)
-    .then(report => {
-      // respond to succesful `create` with status 201 and JSON of new "report"
-      res.status(201).json({ report: report.toObject() })
-    })
-
-    // if an error occurs, pass it off to our error handler
-    // the error handler needs the error message and the `res` object so that it
-    // can send an error message back to the client
-    .catch(next)
-}
-*/
-
 // CREATE
 // POST /reports
-router.post('/reports', requireToken, async (req, res, next) => {
-  const url = req.body.url
+router.post('/reports', requireToken, (req, res, next) => {
   // Kick off a new job by adding it to the report queue
-  const job = await reportQueue.add('scrape site', { url }, { jobId: uniqid('rj-') })
-  // res.status(201).json({ job: job.id })
-  // res.json({ id: job.id })
-  /*
-  scrape(req.body.url)
-    .then(data => {
-      res.locals.reportData = data
-      next()
-    })
-    */
-}
-// , createReportObject, createReportDocument
-)
+  reportQueue.add('scrape site',
+    { url: req.body.url, owner: req.user.id }, // job data
+    { jobId: uniqid('rj-') } // generate unique job ID prefixed with 'rj'
+  )
+    // respond with 201 and JSON of job ID
+    .then(job => res.status(201).json({ job: job.id }))
+    // if an error occurs, pass it to the handler
+    .catch(next)
+})
 
 // UPDATE
 // PATCH /reports/5a7db6c74d55bc51bdf39793

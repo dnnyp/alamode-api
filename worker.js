@@ -16,6 +16,22 @@ const maxJobsPerWorker = 50
 
 // helper function to scrape data from site passed as an argument
 const scrape = require('./lib/scrape_site')
+// helper function to get current date and time
+const getDate = require('./lib/get_date')
+
+// establish database connection
+// use new version of URL parser
+// use createIndex instead of deprecated ensureIndex
+const db = require('./config/db')
+const mongoose = require('mongoose')
+mongoose.Promise = global.Promise
+mongoose.connect(db, {
+  useNewUrlParser: true,
+  useCreateIndex: true
+})
+
+// pull in Mongoose model for reports
+const Report = require('./app/models/report')
 
 function start () {
   // Connect to the named work queue
@@ -24,7 +40,27 @@ function start () {
   reportQueue.process('scrape site', maxJobsPerWorker, async (job) => {
     // scrape product data from URL
     const productData = await scrape(job.data.url)
-    return productData
+
+    // parse URL
+    let parsedUrl = job.data.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
+    if (parsedUrl != null && parsedUrl.length > 2 && typeof parsedUrl[2] === 'string' && parsedUrl[2].length > 0) {
+      parsedUrl = parsedUrl[2]
+    } else {
+      parsedUrl = null
+    }
+
+    // construct report object
+    const reportObject = {
+      title: `${getDate()} ${parsedUrl}`,
+      url: job.data.url,
+      products: productData,
+      owner: job.data.owner
+    }
+
+    // create new Mongo report document using report object
+    const report = await Report.create(reportObject)
+
+    return report
   })
 }
 
