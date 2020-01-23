@@ -43,6 +43,8 @@ function start () {
       // scrape product data from URL
       const productData = await scrape(job.data.url)
 
+      job.progress(50) // set job progress to 50% once scrape is complete
+
       // parse URL
       let parsedUrl = job.data.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
       if (parsedUrl != null && parsedUrl.length > 2 && typeof parsedUrl[2] === 'string' && parsedUrl[2].length > 0) {
@@ -59,8 +61,12 @@ function start () {
         owner: job.data.owner
       }
 
+      job.progress(75) // set job progress to 75% once report object is created
+
       // create new Mongo report document using report object
       const report = await Report.create(reportObject)
+
+      job.progress(100) // set job progress to 100% once report document is persisted to database
 
       return report
     } catch (err) {
