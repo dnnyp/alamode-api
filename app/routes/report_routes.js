@@ -96,8 +96,8 @@ router.post('/reports', requireToken, (req, res, next) => {
     { url: req.body.url, owner: req.user.id }, // job data
     { jobId: uniqid('rj-') } // generate unique job ID prefixed with 'rj'
   )
-    // respond with 201 and JSON of job ID
-    .then(job => res.status(201).json({ job: job.id }))
+    // respond with 202 and JSON of job ID
+    .then(job => res.status(202).json({ job: job.id }))
     // if an error occurs, pass it to the handler
     .catch(next)
 })
