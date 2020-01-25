@@ -23,9 +23,7 @@ const arena = Arena({
     {
       name: 'Reports',
       hostId: 'A LA MODE Queue Server',
-      redis: {
-        port: 6379 // Redis port
-      }
+      url: REDIS_URL
     }
   ]
 },
