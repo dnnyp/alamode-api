@@ -39,6 +39,17 @@ mongoose.connect(db, {
 // instantiate express application object
 const app = express()
 
+// Bull docs: https://github.com/OptimalBits/bull/tree/develop/docs
+const Queue = require('bull')
+// Connect to a local redis instance locally, and the Heroku-provided URL in production
+const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
+// set up a Reports queue connected to the Redis instance
+const reportQueue = new Queue('Reports', REDIS_URL)
+
+// require socket.io
+const server = require('http').Server(app)
+const io = require('socket.io')(server)
+
 // set CORS headers on response from this API using the `cors` NPM package
 // `CLIENT_ORIGIN` is an environment variable that will be set on Heroku
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || `http://localhost:${clientDevPort}` }))
@@ -75,8 +86,13 @@ app.use(userRoutes)
 app.use(errorHandler)
 
 // run API on designated port (4741 in this case)
-app.listen(port, () => {
+server.listen(port, () => {
   console.log('listening on port ' + port)
+})
+
+reportQueue.on('global:completed', (jobId, result) => {
+  console.log(`Job completed with result ${result}`)
+  io.emit(jobId, { reportId: JSON.parse(result)._id })
 })
 
 // needed for testing

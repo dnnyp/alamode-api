@@ -142,8 +142,4 @@ router.delete('/reports/:id', requireToken, (req, res, next) => {
     .catch(next)
 })
 
-reportQueue.on('global:completed', (jobId, result) => {
-  console.log(`Job completed with result ${result}`)
-})
-
 module.exports = router
