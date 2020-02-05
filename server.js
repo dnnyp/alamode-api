@@ -90,9 +90,14 @@ server.listen(port, () => {
   console.log('listening on port ' + port)
 })
 
+reportQueue.on('global:progress', (jobId, progress) => {
+  console.log(`Job ${jobId} is ${progress}% ready!`)
+  io.emit(jobId + '-p', { progress: progress })
+})
+
 reportQueue.on('global:completed', (jobId, result) => {
   console.log(`Job completed with result ${result}`)
-  io.emit(jobId, { reportId: JSON.parse(result)._id })
+  io.emit(jobId + '-c', { reportId: JSON.parse(result)._id })
 })
 
 // needed for testing

@@ -40,10 +40,9 @@ function start () {
 
   reportQueue.process('scrape site', maxJobsPerWorker, async (job) => {
     try {
+      job.progress(0)
       // scrape product data from URL
-      const productData = await scrape(job.data.url)
-
-      job.progress(50) // set job progress to 50% once scrape is complete
+      const productData = await scrape(job, job.data.url)
 
       // parse URL
       let parsedUrl = job.data.url.match(/:\/\/(www[0-9]?\.)?(.[^/:]+)/i)
@@ -60,8 +59,6 @@ function start () {
         products: productData,
         owner: job.data.owner
       }
-
-      job.progress(75) // set job progress to 75% once report object is created
 
       // create new Mongo report document using report object
       const report = await Report.create(reportObject)
